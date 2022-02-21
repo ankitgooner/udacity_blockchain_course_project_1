@@ -73,16 +73,21 @@ class Blockchain {
             }
             block.time = new Date().getTime().toString().slice(0, -3);
             block.hash = SHA256(JSON.stringify(block)).toString();
-            self.chain.push(block);
 
-            if (block) {
-                resolve(block)
+            let arr = await self.validateChain();
+            if (arr.length == 0) {
+                if (block) {
+                    self.chain.push(block);
+                    resolve(block)
+                }
+                else {
+                    reject("error in block creation")
+                }
+
             }
             else {
-                reject("error in block creation")
+                reject("chain validation Failed with at least one error " + arr[0])
             }
-
-
         });
 
 
@@ -232,15 +237,22 @@ class Blockchain {
                             let previousBlockHash = entry.previousBlockHash;
                             let blockHash = self.chain[chainIndex - 1].hash;
                             if (blockHash != previousBlockHash) {
-                                errorLog.push(`Error - Block : ${block.height} - Previous Hash don't match.`);
+                                let err = `Error - Block : ${block.height} - Previous Hash don't match.`;
+                                console.log(err)
+                                errorLog.push(err);
                             }
                             chainIndex++;
                         }
                     }
                     else {
-                        errorLog.push(`Error - Block  ${block.height} -validation failed`);
+
+                        let err = `Error - Block  ${block.height} -validation failed`;
+                        console.log(err)
+                        errorLog.push(err);
                     }
                 });
+
+            resolve(errorLog);
 
         });
     }
